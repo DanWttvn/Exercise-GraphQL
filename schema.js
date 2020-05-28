@@ -1,3 +1,4 @@
+const axios = require('axios');
 const {
 	GraphQLObjectType,
 	GraphQLString,
@@ -8,12 +9,15 @@ const {
 	GraphQLSkipDirective
 } = require("graphql")
 
-// Data
+
+/* 
+Hardcoded Data
 const customers = [
 	{id: "1", name: "JohnDoe", email: "jd@gmail.com", age: 54},
 	{id: "2", name: "Steve M", email: "steve@gmail.com", age: 14},
 	{id: "3", name: "Sara W", email: "sara@gmail.com", age: 54},
 ]
+*/
 
 // Customer Type
 const CustomerType = new GraphQLObjectType({
@@ -27,7 +31,7 @@ const CustomerType = new GraphQLObjectType({
 })
 
 // Root Query
-const RootQuery= new GraphQLObjectType({
+const RootQuery = new GraphQLObjectType({
     name:'RootQueryType',
     fields:{
         customer:{
@@ -36,14 +40,26 @@ const RootQuery= new GraphQLObjectType({
                 id:{type:GraphQLString}
             },
             resolve(parentValue, args){
-				// Hradcoded find in the DB
+				/* Heardcoded find in the DB
 				for (let i = 0; i < customers.length; i++) {
 					if(customers[i].id == args.id) {
 						return customers[i]
 					}
 				}
+				*/
+				return axios.get(`http://localhost:3000/customers/${args.id}`)
+							.then(res => res.data)
             }
-        },
+		},
+		customers: {
+			type: new GraphQLList(CustomerType),
+			// doesnt have args cause im not gonna fetch them by the id
+			resolve(parentValue, args) {
+				// return customers;
+				return axios.get(`http://localhost:3000/customers`)
+							.then(res => res.data)
+			}
+		}
         
     }
 });
@@ -64,6 +80,14 @@ querys:
 		name,
 		age
 	}
+}
+
+{
+  customers {
+    name,
+    age,
+    id
+  }
 }
 
 {
