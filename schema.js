@@ -6,7 +6,8 @@ const {
 	GraphQLSchema,
 	GraphQLList,
 	GraphQLNonNull,
-	GraphQLSkipDirective
+	GraphQLSkipDirective,
+	graphqlSync
 } = require("graphql")
 
 
@@ -59,14 +60,60 @@ const RootQuery = new GraphQLObjectType({
 				return axios.get(`http://localhost:3000/customers`)
 							.then(res => res.data)
 			}
-		}
-        
+		}  
     }
 });
 
 
+// Mutations, the way to edit the data
+const mutation = new GraphQLObjectType({
+	name: "Mutation",
+	fields: {
+		addCustomer: {
+			type: CustomerType,
+			args: {
+				name: {type: new GraphQLNonNull(GraphQLString)}, // wrapped in nonNull to make it required
+				email: {type: new GraphQLNonNull(GraphQLString)},
+				age: {type: new GraphQLNonNull(GraphQLInt)},
+			},
+			resolve(parentValue, args) {
+				return axios.post(`http://localhost:3000/customers/`, {
+					name: args.name,
+					email: args.email,
+					age: args.age
+				}).then(res => res.data)
+			}
+		},
+		deleteCustomer: {
+			type: CustomerType,
+			args: {
+				id: {type: new GraphQLNonNull(GraphQLString)}
+			},
+			resolve(parentValue, args) {
+				return axios.delete(`http://localhost:3000/customers/${args.id}`)
+							.then(res => res.data)
+			}
+		},
+		editCustomer: {
+			type: CustomerType,
+			args: {
+				id: {type: new GraphQLNonNull(GraphQLString)},
+				name: {type: GraphQLString}, // wrapped in nonNull to make it required
+				email: {type: GraphQLString},
+				age: {type: GraphQLInt},
+			},
+			resolve(parentValue, args) {
+				return axios.patch(`http://localhost:3000/customers/${args.id}`, args)
+							.then(res => res.data)
+			}
+		},
+	}
+})
+
+
 module.exports = new GraphQLSchema({
-	query: RootQuery
+	query: RootQuery,
+	mutation
 });
 
 
@@ -97,4 +144,29 @@ querys:
 }
 }
 
+
+mutations:
+
+- post:
+
+mutation {
+  addCustomer(name:"Daniela", email:"d@gmail.com", age: 25) {
+    id,
+    name,
+    email
+  }
+}
+
+mutation {
+  editCustomer(id: "1", age: 50) {
+    id,
+    name,
+    age
+  }
+}
+mutation {
+	function(how, body) {
+		res
+	}
+}
 */
